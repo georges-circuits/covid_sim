@@ -149,3 +149,8 @@ static
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
+
+# manim
+manim/
+manim-shaders/
+manim-master/

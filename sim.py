@@ -42,7 +42,15 @@ class State():
         return [p.location.x for p in self.people], [p.location.y for p in self.people], [COLORS[p.status] for p in self.people]
 
     def update(self):
-        pass
+        for person in self.people:
+            if person.is_infected():
+                for prey in self.people:
+                    if prey.is_healthy() and prey != person and person.distance_to(prey) <= person.infection_radius:
+                        if rnd.random(1) <= person.infection_probability:
+                            prey.status = "S"
+        for person in self.people:
+            person.update()
+
 
 class Person():
     def __init__(self):
@@ -56,14 +64,14 @@ class Person():
         
         self.status = "H"
         self.sickness_duration = rnd.randint(40, 60)
+        self.infection_radius = 50
+        self.infection_probability = 0.2
 
-    
     def change_mind(self):
         self.heading = rand_degrees()
         self.speed = rand_float_in_range(0, self.max_speed)
         self.change_holdoff = rnd.randint(10, 50)
-    
-    
+        
     def update(self):
         if self.change_holdoff > 0:
             self.change_holdoff -= 1
@@ -81,10 +89,11 @@ class Person():
         if not self.location.is_within_bound(self.bound):
             self.heading = self.get_heading_to_center()
         
-        if self.status == "S":
+        if self.is_infected():
             if self.sickness_duration:
                 self.sickness_duration -= 1
-
+            else:
+                self.status = "R"
 
     def get_heading_to_center(self):
         # draw it on a piece of paper to see that it works (compare to get_theta)
@@ -109,6 +118,20 @@ class Person():
         elif x > 0 and y < 0:
             deg = 360 - deg
         return deg
+
+    def is_healthy(self):
+        if self.status == "H":
+            return True
+        return False
+    
+    def is_infected(self):
+        if self.status == "S":
+            return True
+        return False
+
+    def distance_to(self, to):
+        return math.sqrt((self.location.x - to.location.x) ** 2 + (self.location.y - to.location.y) ** 2)
+
 
 class Coordinates():
     def __init__(self, x = 0, y = 0):
@@ -234,8 +257,7 @@ def plot_update(i):
 
 def field_update(i):
     plot_update(i)
-    for p in world.people:
-        p.update()
+    world.update()
 
 ani = animation.FuncAnimation(fig, field_update, interval=100)
 

@@ -20,3 +20,9 @@ Funguje základní pohyb a respektování hranic.
 Už mám i vizi výstupu.
 
 Přidán requirements.txt
+
+Barvičky a rozdělení na dva subploty
+
+### 5.4
+(Už je po půlnoci)
+Dokončena implementace druhého grafu... chce to cleanup ale funguje to, celkově by bylo fajn dát tu celou spodní část do nějaké hezké classy ale zatím jsem nevymyslel jak. However mám možná vymyšlené jak kontrolovat blízkost lidí a šíření nákazy.

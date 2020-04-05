@@ -1,4 +1,25 @@
 # Pokus o simulaci corony
+1. Clone do složky
+    ```git clone git@github.com:georges-circuits/covid_sim.git [název složky]```
+
+2. Doporučuji založit virtuální prostředí
+    - [Tutoriál pro Linux/Mac](https://www.youtube.com/watch?v=Kg1Yvry_Ydk)
+    - [Tutoriál pro Windows](https://www.youtube.com/watch?v=APOPm01BVrk)
+
+    ```python3 -m venv venv
+    source venv/bin/activate```
+
+    Poté už nemusíte psát 3 za pip a python, venv používá nejnovější verzi automaticky.
+
+3. Po aktivaci nainstalujte dependencies
+    ```pip3 install -r requirements.txt ```
+
+4. Spuštění
+    Zatím jsou všechny parametry natvrdo v kódu, nejspíš to tak i zůstane, protože je to v tomto případě o **dost** jednodušší (jednak z důvodu množství parametrů a jednak kvůli samotnému charakteru aplikace - neustále se parametry přidávají a mění a vymyslet nějaký scalable systém, který by byl dostatečně flexibilní, je nad moji míru motivace)... Ale možná přidám komentáře jakmile se v tom sám ztratím.
+
+    ```python3 sim.py```
+
+    Soubor test je pro samostatné testování nejistých funkcí a možná bych ho mohl dát do gitignore.
 
 
 # Worklog
@@ -35,6 +56,6 @@ Ta class nebyla tak těžká, jen to chce cleanup, opět.
 
 Cleanup a mnohem lepší zadávání údajů do grafu, možnost velice jednoduše rozšířit počet stavů - stačí připsat do slovníku COLORS. Komentáře aspoň v initu Simulace.
 
-Opravdu je výsledek simulace vždycky naprosto rozdílný od předchozího. Tento průběh je spoštěný se stejným nastavením jako ten výš. Nicméně je to teoreticky připravené na mnohem větší simulace, ale zatím mě baví sledovat tyto obrovské variace u těchto menších.
+Opravdu je výsledek simulace vždycky naprosto rozdílný od předchozího. Tento průběh je spoštěný se stejným nastavením jako ten výš... Nevidíhttps://github.com/georges-circuits/covid_simm důvod proč by to nebylo připravené na mnohem větší simulace, ale zatím mě baví sledovat tyto obrovské variace u těchto menších.
 
 ![nth run](samples/same_settings_as_first.png)

@@ -1,20 +1,25 @@
 # Pokus o simulaci corony
 1. Clone do složky
+    
     ```git clone git@github.com:georges-circuits/covid_sim.git [název složky]```
 
 2. Doporučuji založit virtuální prostředí
+    
     - [Tutoriál pro Linux/Mac](https://www.youtube.com/watch?v=Kg1Yvry_Ydk)
     - [Tutoriál pro Windows](https://www.youtube.com/watch?v=APOPm01BVrk)
 
-    ```python3 -m venv venv
-    source venv/bin/activate```
+    ```python3 -m venv venv```
+    
+    ```source venv/bin/activate```
 
-    Poté už nemusíte psát 3 za pip a python, venv používá nejnovější verzi automaticky.
+    Poté už nemusíte psát ```pip3``` a ```python3```, venv používá nejnovější verzi automaticky.
 
 3. Po aktivaci nainstalujte dependencies
+    
     ```pip3 install -r requirements.txt ```
 
 4. Spuštění
+    
     Zatím jsou všechny parametry natvrdo v kódu, nejspíš to tak i zůstane, protože je to v tomto případě o **dost** jednodušší (jednak z důvodu množství parametrů a jednak kvůli samotnému charakteru aplikace - neustále se parametry přidávají a mění a vymyslet nějaký scalable systém, který by byl dostatečně flexibilní, je nad moji míru motivace)... Ale možná přidám komentáře jakmile se v tom sám ztratím.
 
     ```python3 sim.py```

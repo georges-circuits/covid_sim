@@ -12,6 +12,58 @@ COLORS = {
     "S": 2,
     "R": 3
 }
+class Simulation(animation.FuncAnimation):
+    def __init__(self):
+        plt.rcParams['figure.facecolor'] = 'black'
+        plt.rcParams['axes.facecolor'] = 'black'
+        plt.rcParams['axes.edgecolor'] = 'white'
+        plt.rcParams['axes.labelcolor'] = 'white'
+        plt.rcParams['xtick.color'] = 'white'
+        plt.rcParams['ytick.color'] = 'white'
+        plt.rcParams['text.color'] = 'white'
+
+        self.fig = plt.figure(tight_layout=True, figsize=(15, 8))
+        self.axWorld = self.fig.add_subplot(121)
+        self.axGraph = self.fig.add_subplot(122, frameon=False)
+
+        self.cmap = create_colormap([(155, 189, 55), (189, 55, 88), (164, 164, 164)])
+
+        self.world = State()
+        for _ in range(100):
+            self.world.add_person(Person())
+
+        self.world.people[0].status = "S"
+
+        self.healthy = []
+        self.sick = []
+        self.removed = []
+        self.day = []
+
+        animation.FuncAnimation.__init__(self, self.fig, self.field_update, interval=100)
+
+    def plot_update(self, i):
+        self.axWorld.cla()
+        x, y, c = self.world.get_location_of_all()
+        self.axWorld.scatter(x, y, c=c, alpha=0.7, linewidths=0, cmap=self.cmap)
+        self.axWorld.set_xlim(-BOUND, BOUND)
+        self.axWorld.set_ylim(-BOUND, BOUND)
+        self.axWorld.axis("off")
+
+        self.axGraph.cla()
+        self.healthy.append(self.world.count_people_based_on_status("H"))
+        self.sick.append(self.world.count_people_based_on_status("S"))
+        self.removed.append(self.world.count_people_based_on_status("R"))
+        self.day.append(i)
+        self.axGraph.plot(self.day, self.healthy, label="Healthy", c="green")
+        self.axGraph.plot(self.day, self.sick, label="Sick", c="red")
+        self.axGraph.plot(self.day, self.removed, label="Removed", c="grey")
+        #self.axGraph.legend()
+        self.axGraph.set_ylim(0, len(self.world.people))
+
+
+    def field_update(self, i):
+        self.plot_update(i)
+        self.world.update()
 
 class World():
     def __init__(self):
@@ -207,59 +259,7 @@ def create_colormap(colors):
     return LinearSegmentedColormap(name, cdict, 256)
 
 
-
-plt.rcParams['figure.facecolor'] = 'black'
-plt.rcParams['axes.facecolor'] = 'black'
-plt.rcParams['axes.edgecolor'] = 'white'
-plt.rcParams['axes.labelcolor'] = 'white'
-plt.rcParams['xtick.color'] = 'white'
-plt.rcParams['ytick.color'] = 'white'
-plt.rcParams['text.color'] = 'white'
-
-
-fig = plt.figure(tight_layout=True, figsize=(15, 8))
-axWorld = fig.add_subplot(121)
-axGraph = fig.add_subplot(122, frameon=False)
-
-cmap = create_colormap([(155, 189, 55), (189, 55, 88), (164, 164, 164)])
-
-world = State()
-for i in range(100):
-    world.add_person(Person())
-
-world.people[0].status = "S"
-
-healthy = []
-sick = []
-removed = []
-day = []
-
-
-def plot_update(i):
-    axWorld.cla()
-    x, y, c = world.get_location_of_all()
-    axWorld.scatter(x, y, c=c, alpha=0.7, linewidths=0, cmap=cmap)
-    axWorld.set_xlim(-BOUND, BOUND)
-    axWorld.set_ylim(-BOUND, BOUND)
-    axWorld.axis("off")
-
-    axGraph.cla()
-    healthy.append(world.count_people_based_on_status("H"))
-    sick.append(world.count_people_based_on_status("S"))
-    removed.append(world.count_people_based_on_status("R"))
-    day.append(i)
-    axGraph.plot(day, healthy, label="Healthy", c="green")
-    axGraph.plot(day, sick, label="Sick", c="red")
-    axGraph.plot(day, removed, label="Removed", c="grey")
-    #axGraph.legend()
-    axGraph.set_ylim(0, len(world.people))
-
-
-def field_update(i):
-    plot_update(i)
-    world.update()
-
-ani = animation.FuncAnimation(fig, field_update, interval=100)
-
+# has to keep local reference, it will get GCed otherwise
+sim = Simulation()
 plt.show()
 

@@ -30,3 +30,5 @@ Dokončena implementace druhého grafu... chce to cleanup ale funguje to, celkov
 Z nějakého důvodu to běží napoprvé... Zatím je to hodně barebones ale základní princip funguje a už i tak to stihlo vyprodukovat celkem zajímavý průběh hned při prvním runu. Coded myself to sleep.
 
 ![first run](samples/first_run.png)
+
+Ta class nebyla tak těžká, jen to chce cleanup, opět.

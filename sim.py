@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import matplotlib.colors as colors
 import numpy as np
 import numpy.random as rnd
 import math
@@ -31,11 +32,12 @@ class Simulation(animation.FuncAnimation):
         self.axGraph = self.fig.add_subplot(122, frameon=False)
 
         # custom color map according to COLORS
-        self.cmap = create_colormap([c['rgb'] for c in COLORS.values()])
+        self.cmap = colors.LinearSegmentedColormap.from_list('custom', [c['rgb'] for c in COLORS.values()])
+        self.norm = plt.Normalize(1, len(COLORS))
 
         # create the world
         self.world = State()
-        for _ in range(100):
+        for _ in range(1000):
             self.world.add_person(Person())
 
         # infect first person
@@ -52,7 +54,7 @@ class Simulation(animation.FuncAnimation):
     def plot_update(self, i):
         self.axWorld.cla()
         x, y, c = self.world.get_location_of_all()
-        self.axWorld.scatter(x, y, c=c, alpha=0.8, linewidths=0, cmap=self.cmap)
+        self.axWorld.scatter(x, y, c=c, alpha=0.8, linewidths=0, cmap=self.cmap, norm=self.norm)
         self.axWorld.set_xlim(-BOUND, BOUND)
         self.axWorld.set_ylim(-BOUND, BOUND)
         self.axWorld.axis("off")
@@ -210,58 +212,6 @@ def rand_float_in_range(lower, upper):
 
 def rand_degrees():
     return rnd.randint(0, 360)
-
-def create_colormap(colors):
-    reverse=False
-    name='custom_colormap'
-    position=None
-    bit=False
-    # from https://github.com/CSlocumWX/custom_colormap
-    """
-    returns a linear custom colormap
-    Parameters
-    ----------
-    colors : array-like
-        contain RGB values. The RGB values may either be in 8-bit [0 to 255]
-        or arithmetic [0 to 1] (default).
-        Arrange your tuples so that the first color is the lowest value for the
-        colorbar and the last is the highest.
-    position : array like
-        contains values from 0 to 1 to dictate the location of each color.
-    bit : Boolean
-        8-bit [0 to 255] (in which bit must be set to
-        True when called) or arithmetic [0 to 1] (default)
-    reverse : Boolean
-        If you want to flip the scheme
-    name : string
-        name of the scheme if you plan to save it
-    Returns
-    -------
-    cmap : matplotlib.colors.LinearSegmentedColormap
-        cmap with equally spaced colors
-    """
-    from matplotlib.colors import LinearSegmentedColormap
-    if not isinstance(colors, np.ndarray):
-        colors = np.array(colors, dtype='f')
-    if reverse:
-        colors = colors[::-1]
-    if position is not None and not isinstance(position, np.ndarray):
-        position = np.array(position)
-    elif position is None:
-        position = np.linspace(0, 1, colors.shape[0])
-    else:
-        if position.size != colors.shape[0]:
-            raise ValueError("position length must be the same as colors")
-        elif not np.isclose(position[0], 0) and not np.isclose(position[-1], 1):
-            raise ValueError("position must start with 0 and end with 1")
-    if bit:
-        colors[:] = [tuple(map(lambda x: x / 255., color)) for color in colors]
-    cdict = {'red':[], 'green':[], 'blue':[]}
-    for pos, color in zip(position, colors):
-        cdict['red'].append((pos, color[0], color[0]))
-        cdict['green'].append((pos, color[1], color[1]))
-        cdict['blue'].append((pos, color[2], color[2]))
-    return LinearSegmentedColormap(name, cdict, 256)
 
 
 # has to keep local reference, it will get GCed otherwise

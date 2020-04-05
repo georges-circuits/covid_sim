@@ -5,14 +5,13 @@
 
 2. Doporučuji založit virtuální prostředí
     
-    - [Tutoriál pro Linux/Mac](https://www.youtube.com/watch?v=Kg1Yvry_Ydk)
-    - [Tutoriál pro Windows](https://www.youtube.com/watch?v=APOPm01BVrk)
+    [Tutoriál pro Linux/Mac](https://www.youtube.com/watch?v=Kg1Yvry_Ydk), [Tutoriál pro Windows](https://www.youtube.com/watch?v=APOPm01BVrk)
 
     ```python3 -m venv venv```
-    
+
     ```source venv/bin/activate```
 
-    Poté už nemusíte psát ```pip3``` a ```python3```, venv používá nejnovější verzi automaticky.
+    Note: Poté už nemusíte psát ```pip3``` a ```python3```, venv používá nejnovější verzi automaticky.
 
 3. Po aktivaci nainstalujte dependencies
     
@@ -59,8 +58,10 @@ Z nějakého důvodu to běží napoprvé... Zatím je to hodně barebones ale z
 
 Ta class nebyla tak těžká, jen to chce cleanup, opět.
 
-Cleanup a mnohem lepší zadávání údajů do grafu, možnost velice jednoduše rozšířit počet stavů - stačí připsat do slovníku COLORS. Komentáře aspoň v initu Simulace.
+Cleanup a mnohem sofistikovanější zadávání údajů do grafu, možnost velice jednoduše rozšířit počet stavů - stačí připsat do slovníku COLORS. Komentáře aspoň v initu Simulace.
 
-Opravdu je výsledek simulace vždycky naprosto rozdílný od předchozího. Tento průběh je spoštěný se stejným nastavením jako ten výš... Nevidíhttps://github.com/georges-circuits/covid_simm důvod proč by to nebylo připravené na mnohem větší simulace, ale zatím mě baví sledovat tyto obrovské variace u těchto menších.
+Opravdu je výsledek simulace vždycky naprosto rozdílný od předchozího. Tento průběh je spoštěný se stejným nastavením jako ten výš... Nevidím důvod proč by to nemělo být připravené na mnohem větší simulace, ale zatím mě baví sledovat tyto obrovské variace u těchto menších.
 
 ![nth run](samples/same_settings_as_first.png)
+
+Opravena chyba v color map

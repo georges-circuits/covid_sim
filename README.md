@@ -32,3 +32,9 @@ Z nějakého důvodu to běží napoprvé... Zatím je to hodně barebones ale z
 ![first run](samples/first_run.png)
 
 Ta class nebyla tak těžká, jen to chce cleanup, opět.
+
+Cleanup a mnohem lepší zadávání údajů do grafu, možnost velice jednoduše rozšířit počet stavů - stačí připsat do slovníku COLORS. Komentáře aspoň v initu Simulace.
+
+Opravdu je výsledek simulace vždycky naprosto rozdílný od předchozího. Tento průběh je spoštěný se stejným nastavením jako ten výš. Nicméně je to teoreticky připravené na mnohem větší simulace, ale zatím mě baví sledovat tyto obrovské variace u těchto menších.
+
+![nth run](samples/same_settings_as_first.png)

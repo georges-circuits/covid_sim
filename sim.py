@@ -7,13 +7,16 @@ import math
 MAX_SPEED = 10
 BOUND = 500
 
+# also dictates possible statuses
 COLORS = {
-    "H": 1,
-    "S": 2,
-    "R": 3
+    'S': {'id': 1, 'rgb': (0.61, 0.74, 0.22)},
+    'I': {'id': 2, 'rgb': (0.84, 0.22, 0.32)},
+    'R': {'id': 3, 'rgb': (0.5, 0.5, 0.5)}
 }
+
 class Simulation(animation.FuncAnimation):
     def __init__(self):
+        # dark mode :)
         plt.rcParams['figure.facecolor'] = 'black'
         plt.rcParams['axes.facecolor'] = 'black'
         plt.rcParams['axes.edgecolor'] = 'white'
@@ -22,41 +25,43 @@ class Simulation(animation.FuncAnimation):
         plt.rcParams['ytick.color'] = 'white'
         plt.rcParams['text.color'] = 'white'
 
+        # init fig and subplots
         self.fig = plt.figure(tight_layout=True, figsize=(15, 8))
         self.axWorld = self.fig.add_subplot(121)
         self.axGraph = self.fig.add_subplot(122, frameon=False)
 
-        self.cmap = create_colormap([(155, 189, 55), (189, 55, 88), (164, 164, 164)])
+        # custom color map according to COLORS
+        self.cmap = create_colormap([c['rgb'] for c in COLORS.values()])
 
+        # create the world
         self.world = State()
         for _ in range(100):
             self.world.add_person(Person())
 
-        self.world.people[0].status = "S"
+        # infect first person
+        self.world.people[0].status = "I"
 
-        self.healthy = []
-        self.sick = []
-        self.removed = []
-        self.day = []
+        # init the graph part
+        self.population_graph = {'days': [], 'values': []}
+        for designator, color in COLORS.items():
+            self.population_graph['values'].append({'color': color['rgb'], 'designator': designator, 'data': []})
 
+        # call the FuncAnimation constructor
         animation.FuncAnimation.__init__(self, self.fig, self.field_update, interval=100)
 
     def plot_update(self, i):
         self.axWorld.cla()
         x, y, c = self.world.get_location_of_all()
-        self.axWorld.scatter(x, y, c=c, alpha=0.7, linewidths=0, cmap=self.cmap)
+        self.axWorld.scatter(x, y, c=c, alpha=0.8, linewidths=0, cmap=self.cmap)
         self.axWorld.set_xlim(-BOUND, BOUND)
         self.axWorld.set_ylim(-BOUND, BOUND)
         self.axWorld.axis("off")
 
         self.axGraph.cla()
-        self.healthy.append(self.world.count_people_based_on_status("H"))
-        self.sick.append(self.world.count_people_based_on_status("S"))
-        self.removed.append(self.world.count_people_based_on_status("R"))
-        self.day.append(i)
-        self.axGraph.plot(self.day, self.healthy, label="Healthy", c="green")
-        self.axGraph.plot(self.day, self.sick, label="Sick", c="red")
-        self.axGraph.plot(self.day, self.removed, label="Removed", c="grey")
+        self.population_graph['days'].append(i)
+        for value in self.population_graph['values']:
+            value['data'].append(self.world.count_people_based_on_status(value['designator']))
+            self.axGraph.plot(self.population_graph['days'], value['data'], label=value['designator'], c=value['color'])
         #self.axGraph.legend()
         self.axGraph.set_ylim(0, len(self.world.people))
 
@@ -91,7 +96,7 @@ class State():
                 yield person
 
     def get_location_of_all(self):
-        return [p.location.x for p in self.people], [p.location.y for p in self.people], [COLORS[p.status] for p in self.people]
+        return [p.location.x for p in self.people], [p.location.y for p in self.people], [COLORS[p.status]['id'] for p in self.people]
 
     def update(self):
         for person in self.people:
@@ -99,7 +104,7 @@ class State():
                 for prey in self.people:
                     if prey.is_healthy() and prey != person and person.distance_to(prey) <= person.infection_radius:
                         if rnd.random(1) <= person.infection_probability:
-                            prey.status = "S"
+                            prey.status = "I"
         for person in self.people:
             person.update()
 
@@ -114,7 +119,7 @@ class Person():
         self.location.set_random_within_bound(self.bound)
         self.change_mind()
         
-        self.status = "H"
+        self.status = "S"
         self.sickness_duration = rnd.randint(40, 60)
         self.infection_radius = 50
         self.infection_probability = 0.2
@@ -172,12 +177,12 @@ class Person():
         return deg
 
     def is_healthy(self):
-        if self.status == "H":
+        if self.status == "S":
             return True
         return False
     
     def is_infected(self):
-        if self.status == "S":
+        if self.status == "I":
             return True
         return False
 
@@ -210,7 +215,7 @@ def create_colormap(colors):
     reverse=False
     name='custom_colormap'
     position=None
-    bit=True
+    bit=False
     # from https://github.com/CSlocumWX/custom_colormap
     """
     returns a linear custom colormap

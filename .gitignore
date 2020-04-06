@@ -154,3 +154,5 @@ static
 manim/
 manim-shaders/
 manim-master/
+
+exports/

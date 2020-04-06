@@ -67,3 +67,5 @@ Opravena chyba v color map.
 Snaha o implementaci relativního souřadnicového systému... Už se to dokonce samo zastaví jakmile už není nikdo nakažený. Možnost změny DAY konstanty, která určuje kolik updatů simulace se provede pro jeden update grafů.
 
 Opuštění nápadu více států z důvodu komplexity a také si nejsem jistý jestli by mělo žádoucí přínos - sledování víceméně stejných průběhů na několika místech mi přijde jako plýtvání výpočetním výkonem. Tečky svojí velikostí symbolizují svůj infection_radius (snad).
+
+Přidán nějaký výpočet R0, asi chce doladit. Postupně bych rád přidal víc dynamiky - náhodné testování a karanténa, přenašeči, společné místo atd.

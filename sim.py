@@ -4,10 +4,19 @@ import matplotlib.colors as colors
 import numpy as np
 import numpy.random as rnd
 import math
+import time
 
 MAX_SPEED = 2
-P_BOUND = 100
+P_BOUND = 500
 DAY = 24
+
+DURATION = 330 # roughly 14 days if we count each update as an hour
+PERSONAS = 3000
+
+# matplotlib doesn't allow simultaneous video export and preview
+# (please prove me wrong), setup paramaters are on the last lines
+# export is mostly broken anyways
+EXPORT = False
 
 W_BOUND = P_BOUND
 sim = None
@@ -46,7 +55,7 @@ class Simulation(animation.FuncAnimation):
 
         # create the world
         self.world = World()
-        for _ in range(250):
+        for _ in range(PERSONAS):
             self.world.add_person(Person())
 
         print(f'Created a world with {self.world.population()} people')
@@ -85,7 +94,11 @@ class Simulation(animation.FuncAnimation):
 
         if not self.world.count_people_based_on_status('I'):
             sim.event_source.stop()
-        
+        else:
+            if i % 5 == 0:
+                print (
+                    f'Updt: {i}, R0: {self.world.calculate_R0()}'
+                )
         for _ in range(DAY):
             self.world.update()
 
@@ -133,12 +146,20 @@ class World():
             [p.infection_radius for p in self.people]
         )
 
+    def calculate_R0(self):
+        # how to calculate: https://web.stanford.edu/~jhj1/teachingdocs/Jones-on-R0.pdf
+        c_bar = sum(person.came_in_contact for person in self.get_people_based_on_status("I")) / self.count_people_based_on_status("I")
+        for person in self.get_people_based_on_status("I"):
+            person.came_in_contact = 0
+        return round(c_bar * DURATION / DAY, 2)
+    
     def update(self):
         for person in self.people:
             if person.is_infected():
                 for prey in self.people:
                     if prey.is_healthy() and prey != person and person.distance_to(prey) <= person.infection_radius:
                         if rnd.random(1) <= person.infection_probability:
+                            person.came_in_contact += 1
                             prey.status = "I"
         for person in self.people:
             person.update()
@@ -169,12 +190,14 @@ class Person():
         self.location.set_random_within_bound(self.bound)
         
         self.status = "S"
-        self.sickness_duration = 330 # roughly 14 days if we count each update as an hour
-        self.infection_radius = 3
-        self.infection_probability = 0.1
+        self.sickness_duration = DURATION
+        self.infection_radius = 2
+        self.infection_probability = 0.2
         #self.change_config('normal')
 
-        self.travel_probability = 0.001
+        self.came_in_contact = 0
+        
+        self.travel_probability = 0.0005
         
         self.change_mind()
 
@@ -257,5 +280,16 @@ def rand_degrees():
 
 # has to keep local reference, it will get GCed otherwise
 sim = Simulation()
-plt.show()
 
+if EXPORT:
+    import os.path
+    import glob
+    export_name = f'run_P{sim.world.population()}_S{MAX_SPEED}_B{P_BOUND}(*).mp4'
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'exports', export_name)
+    file_index = 1
+    for file_name in glob.glob(path):
+        # won't work for numbers > 9 of course...
+        file_index = int(file_name[-6]) + 1
+    sim.save(path.replace('*', str(file_index)), writer="ffmpeg", fps=10)
+
+plt.show()

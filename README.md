@@ -64,4 +64,7 @@ Opravdu je výsledek simulace vždycky naprosto rozdílný od předchozího. Ten
 
 ![nth run](samples/same_settings_as_first.png)
 
-Opravena chyba v color map
+Opravena chyba v color map.
+
+# 6.4
+Snaha o implementaci relativního souřadnicového systému...

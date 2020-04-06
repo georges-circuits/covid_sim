@@ -5,15 +5,36 @@ import numpy as np
 import numpy.random as rnd
 import math
 
-MAX_SPEED = 10
-BOUND = 500
+MAX_SPEED = 1
+P_BOUND = 100
+W_BOUND = 240
+DAY = 24
 
 # also dictates possible statuses
 COLORS = {
+    'S': {'id': 1, 'rgb': (0, 1, 0)},
+    'I': {'id': 2, 'rgb': (1, 0, 0)},
+    'R': {'id': 3, 'rgb': (0.5, 0.5, 0.5)}
+}
+""" COLORS = {
     'S': {'id': 1, 'rgb': (0.61, 0.74, 0.22)},
     'I': {'id': 2, 'rgb': (0.84, 0.22, 0.32)},
     'R': {'id': 3, 'rgb': (0.5, 0.5, 0.5)}
-}
+} """
+
+class Coordinates():
+    def __init__(self, x = 0, y = 0):
+        self.x = x
+        self.y = y
+    
+    def is_within_bound(self, bound):
+        if bound.x > abs(self.x) and bound.y > abs(self.y):
+            return True
+        return False
+
+    def set_random_within_bound(self, bound):
+        self.x = rnd.randint(-bound.x, bound.x)
+        self.y = rnd.randint(-bound.y, bound.y)
 
 class Simulation(animation.FuncAnimation):
     def __init__(self):
@@ -36,12 +57,22 @@ class Simulation(animation.FuncAnimation):
         self.norm = plt.Normalize(1, len(COLORS))
 
         # create the world
-        self.world = State()
-        for _ in range(1000):
-            self.world.add_person(Person())
+        state_centers = []
+        quadrant = [[1, 1], [-1, 1], [-1, -1], [1, -1]]
+        for i in range(len(quadrant)):
+            xy = 120
+            state_centers.append(Coordinates(xy * quadrant[i][0], xy * quadrant[i][1]))
+        
+        self.world = World()
+        for i in range(len(state_centers)):
+            self.world.add_state(State())
+            for _ in range(300):
+                self.world.states[i].add_person(Person(center=state_centers[i]))
 
+        print(f'Created a world with {self.world.population()} people in {len(self.world.states)} state(s)')
+        
         # infect first person
-        self.world.people[0].status = "I"
+        self.world.states[0].people[0].status = "I"
 
         # init the graph part
         self.population_graph = {'days': [], 'values': []}
@@ -55,8 +86,8 @@ class Simulation(animation.FuncAnimation):
         self.axWorld.cla()
         x, y, c = self.world.get_location_of_all()
         self.axWorld.scatter(x, y, c=c, alpha=0.8, linewidths=0, cmap=self.cmap, norm=self.norm)
-        self.axWorld.set_xlim(-BOUND, BOUND)
-        self.axWorld.set_ylim(-BOUND, BOUND)
+        self.axWorld.set_xlim(-W_BOUND, W_BOUND)
+        self.axWorld.set_ylim(-W_BOUND, W_BOUND)
         self.axWorld.axis("off")
 
         self.axGraph.cla()
@@ -65,12 +96,12 @@ class Simulation(animation.FuncAnimation):
             value['data'].append(self.world.count_people_based_on_status(value['designator']))
             self.axGraph.plot(self.population_graph['days'], value['data'], label=value['designator'], c=value['color'])
         #self.axGraph.legend()
-        self.axGraph.set_ylim(0, len(self.world.people))
-
+        self.axGraph.set_ylim(0, self.world.population())
 
     def field_update(self, i):
         self.plot_update(i)
-        self.world.update()
+        for _ in range(DAY):
+            self.world.update()
 
 class World():
     def __init__(self):
@@ -78,6 +109,24 @@ class World():
     
     def add_state(self, state):
         self.states.append(state)
+    
+    def update(self):
+        for state in self.states:
+            state.update()
+
+    def population(self):
+        return sum(len(state.people) for state in self.states)
+
+    def count_people_based_on_status(self, status):
+        return sum(state.count_people_based_on_status(status) for state in self.states)
+    
+    def get_location_of_all(self):
+        out = ([], [], [])
+        for state in self.states:
+            for i, val in enumerate(state.get_location_of_all()):
+                out[i].extend(val)
+        return out
+
 
 class State():
     def __init__(self):
@@ -112,36 +161,59 @@ class State():
 
 
 class Person():
+    """ self.CONFIG = {
+        'normal': {
+            'infection_radius': 10,
+            'infection_probability': 0.2
+        },
+        'in_central': {
+            'infection_radius': 10,
+            'infection_probability': 0.2
+        },
+        'at_home': {
+            'infection_radius': 10,
+            'infection_probability': 0.01
+        }
+    } """
+
     def __init__(self):
         self.center = Coordinates(0, 0)
-        self.bound = Coordinates(BOUND, BOUND)
+        self.bound = Coordinates(P_BOUND, P_BOUND)
         self.max_speed = MAX_SPEED
 
         self.location = Coordinates()
         self.location.set_random_within_bound(self.bound)
-        self.change_mind()
         
         self.status = "S"
-        self.sickness_duration = rnd.randint(40, 60)
-        self.infection_radius = 50
+        self.sickness_duration = 330
+        self.infection_radius = 2
         self.infection_probability = 0.2
+        #self.change_config('normal')
+
+        self.travel_probability = 0.001
+        
+        self.change_mind()
+
+        self.central_location = False
+        self.will_to_go = 0.05
 
     def change_mind(self):
+        if rnd.random(1) < self.travel_probability:
+            self.location.set_random_within_bound(self.bound)
         self.heading = rand_degrees()
         self.speed = rand_float_in_range(0, self.max_speed)
-        self.change_holdoff = rnd.randint(10, 50)
-        
+        self.change_holdoff = rnd.randint(2, 5)
+
+    """ def change_config(self, mode):
+        self.infection_radius = self.CONFIG[mode]['infection_radius']
+        self.infection_probability = self.CONFIG[mode]['infection_probability'] """
+              
     def update(self):
         if self.change_holdoff > 0:
             self.change_holdoff -= 1
             if self.change_holdoff == 0:
                 self.change_mind()
-                """ self.heading += 45
-                if self.heading > 360:
-                   self.heading -= 360
-                print (self.heading)
-                self.change_holdoff = 10 """
-        
+
         self.location.x += math.cos(math.radians(self.heading)) * self.speed
         self.location.y += math.sin(math.radians(self.heading)) * self.speed
 
@@ -190,21 +262,6 @@ class Person():
 
     def distance_to(self, to):
         return math.sqrt((self.location.x - to.location.x) ** 2 + (self.location.y - to.location.y) ** 2)
-
-
-class Coordinates():
-    def __init__(self, x = 0, y = 0):
-        self.x = x
-        self.y = y
-    
-    def is_within_bound(self, bound):
-        if bound.x > abs(self.x) and bound.y > abs(self.y):
-            return True
-        return False
-
-    def set_random_within_bound(self, bound):
-        self.x = rnd.randint(-bound.x, bound.x)
-        self.y = rnd.randint(-bound.y, bound.y)
 
 
 def rand_float_in_range(lower, upper):

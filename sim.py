@@ -5,10 +5,12 @@ import numpy as np
 import numpy.random as rnd
 import math
 
-MAX_SPEED = 1
+MAX_SPEED = 2
 P_BOUND = 100
-W_BOUND = 240
 DAY = 24
+
+W_BOUND = P_BOUND
+sim = None
 
 # also dictates possible statuses
 COLORS = {
@@ -21,20 +23,6 @@ COLORS = {
     'I': {'id': 2, 'rgb': (0.84, 0.22, 0.32)},
     'R': {'id': 3, 'rgb': (0.5, 0.5, 0.5)}
 } """
-
-class Coordinates():
-    def __init__(self, x = 0, y = 0):
-        self.x = x
-        self.y = y
-    
-    def is_within_bound(self, bound):
-        if bound.x > abs(self.x) and bound.y > abs(self.y):
-            return True
-        return False
-
-    def set_random_within_bound(self, bound):
-        self.x = rnd.randint(-bound.x, bound.x)
-        self.y = rnd.randint(-bound.y, bound.y)
 
 class Simulation(animation.FuncAnimation):
     def __init__(self):
@@ -57,22 +45,14 @@ class Simulation(animation.FuncAnimation):
         self.norm = plt.Normalize(1, len(COLORS))
 
         # create the world
-        state_centers = []
-        quadrant = [[1, 1], [-1, 1], [-1, -1], [1, -1]]
-        for i in range(len(quadrant)):
-            xy = 120
-            state_centers.append(Coordinates(xy * quadrant[i][0], xy * quadrant[i][1]))
-        
         self.world = World()
-        for i in range(len(state_centers)):
-            self.world.add_state(State())
-            for _ in range(300):
-                self.world.states[i].add_person(Person(center=state_centers[i]))
+        for _ in range(250):
+            self.world.add_person(Person())
 
-        print(f'Created a world with {self.world.population()} people in {len(self.world.states)} state(s)')
+        print(f'Created a world with {self.world.population()} people')
         
         # infect first person
-        self.world.states[0].people[0].status = "I"
+        self.world.people[0].status = "I"
 
         # init the graph part
         self.population_graph = {'days': [], 'values': []}
@@ -80,12 +60,14 @@ class Simulation(animation.FuncAnimation):
             self.population_graph['values'].append({'color': color['rgb'], 'designator': designator, 'data': []})
 
         # call the FuncAnimation constructor
-        animation.FuncAnimation.__init__(self, self.fig, self.field_update, interval=100)
+        animation.FuncAnimation.__init__(self, self.fig, self.field_update, interval=10)
 
     def plot_update(self, i):
         self.axWorld.cla()
-        x, y, c = self.world.get_location_of_all()
-        self.axWorld.scatter(x, y, c=c, alpha=0.8, linewidths=0, cmap=self.cmap, norm=self.norm)
+        x, y, c, s = self.world.get_location_of_all()
+        for j in range(len(s)):
+            s[j] = s[j] ** 2 * ((self.axWorld.get_window_extent().width  / (2 * W_BOUND + 1.) * 72. / self.fig.dpi) ** 2)
+        self.axWorld.scatter(x, y, c=c, s=s, alpha=0.8, linewidths=0, cmap=self.cmap, norm=self.norm)
         self.axWorld.set_xlim(-W_BOUND, W_BOUND)
         self.axWorld.set_ylim(-W_BOUND, W_BOUND)
         self.axWorld.axis("off")
@@ -100,35 +82,29 @@ class Simulation(animation.FuncAnimation):
 
     def field_update(self, i):
         self.plot_update(i)
+
+        if not self.world.count_people_based_on_status('I'):
+            sim.event_source.stop()
+        
         for _ in range(DAY):
             self.world.update()
 
+
+class Coordinates():
+    def __init__(self, x = 0, y = 0):
+        self.x = x
+        self.y = y
+    
+    def is_within_bound(self, bound):
+        if bound.x > abs(self.x) and bound.y > abs(self.y):
+            return True
+        return False
+
+    def set_random_within_bound(self, bound):
+        self.x = rnd.randint(-bound.x, bound.x)
+        self.y = rnd.randint(-bound.y, bound.y)
+
 class World():
-    def __init__(self):
-        self.states = []
-    
-    def add_state(self, state):
-        self.states.append(state)
-    
-    def update(self):
-        for state in self.states:
-            state.update()
-
-    def population(self):
-        return sum(len(state.people) for state in self.states)
-
-    def count_people_based_on_status(self, status):
-        return sum(state.count_people_based_on_status(status) for state in self.states)
-    
-    def get_location_of_all(self):
-        out = ([], [], [])
-        for state in self.states:
-            for i, val in enumerate(state.get_location_of_all()):
-                out[i].extend(val)
-        return out
-
-
-class State():
     def __init__(self):
         self.people = []
 
@@ -146,8 +122,16 @@ class State():
             if person.status == status:
                 yield person
 
+    def population(self):
+        return len(self.people)
+    
     def get_location_of_all(self):
-        return [p.location.x for p in self.people], [p.location.y for p in self.people], [COLORS[p.status]['id'] for p in self.people]
+        return (
+            [p.location.x for p in self.people],
+            [p.location.y for p in self.people], 
+            [COLORS[p.status]['id'] for p in self.people],
+            [p.infection_radius for p in self.people]
+        )
 
     def update(self):
         for person in self.people:
@@ -185,9 +169,9 @@ class Person():
         self.location.set_random_within_bound(self.bound)
         
         self.status = "S"
-        self.sickness_duration = 330
-        self.infection_radius = 2
-        self.infection_probability = 0.2
+        self.sickness_duration = 330 # roughly 14 days if we count each update as an hour
+        self.infection_radius = 3
+        self.infection_probability = 0.1
         #self.change_config('normal')
 
         self.travel_probability = 0.001
@@ -202,7 +186,7 @@ class Person():
             self.location.set_random_within_bound(self.bound)
         self.heading = rand_degrees()
         self.speed = rand_float_in_range(0, self.max_speed)
-        self.change_holdoff = rnd.randint(2, 5)
+        self.change_holdoff = rnd.randint(1, 10)
 
     """ def change_config(self, mode):
         self.infection_radius = self.CONFIG[mode]['infection_radius']
@@ -249,7 +233,7 @@ class Person():
         elif x > 0 and y < 0:
             deg = 360 - deg
         return deg
-
+    
     def is_healthy(self):
         if self.status == "S":
             return True

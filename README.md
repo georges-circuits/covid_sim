@@ -23,9 +23,6 @@
 
     ```python3 sim.py```
 
-    Soubor test je pro samostatné testování nejistých funkcí a možná bych ho mohl dát do gitignore.
-
-
 # Worklog
 Reminder: Česky!
 
@@ -66,5 +63,7 @@ Opravdu je výsledek simulace vždycky naprosto rozdílný od předchozího. Ten
 
 Opravena chyba v color map.
 
-# 6.4
-Snaha o implementaci relativního souřadnicového systému...
+### 6.4
+Snaha o implementaci relativního souřadnicového systému... Už se to dokonce samo zastaví jakmile už není nikdo nakažený. Možnost změny DAY konstanty, která určuje kolik updatů simulace se provede pro jeden update grafů.
+
+Opuštění nápadu více států z důvodu komplexity a také si nejsem jistý jestli by mělo žádoucí přínos - sledování víceméně stejných průběhů na několika místech mi přijde jako plýtvání výpočetním výkonem. Tečky svojí velikostí symbolizují svůj infection_radius (snad).

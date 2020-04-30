@@ -6,12 +6,12 @@ import numpy.random as rnd
 import math
 import time
 
-MAX_SPEED = 2
-P_BOUND = 500
+MAX_SPEED = 1.5
+P_BOUND = 150
 DAY = 24
 
 DURATION = 330 # roughly 14 days if we count each update as an hour
-PERSONAS = 3000
+PERSONAS = 400
 
 # matplotlib doesn't allow simultaneous video export and preview
 # (please prove me wrong), setup paramaters are on the last lines
@@ -27,11 +27,6 @@ COLORS = {
     'I': {'id': 2, 'rgb': (1, 0, 0)},
     'R': {'id': 3, 'rgb': (0.5, 0.5, 0.5)}
 }
-""" COLORS = {
-    'S': {'id': 1, 'rgb': (0.61, 0.74, 0.22)},
-    'I': {'id': 2, 'rgb': (0.84, 0.22, 0.32)},
-    'R': {'id': 3, 'rgb': (0.5, 0.5, 0.5)}
-} """
 
 class Simulation(animation.FuncAnimation):
     def __init__(self):
@@ -53,6 +48,9 @@ class Simulation(animation.FuncAnimation):
         self.cmap = colors.LinearSegmentedColormap.from_list('custom', [c['rgb'] for c in COLORS.values()])
         self.norm = plt.Normalize(1, len(COLORS))
 
+        # time readouts
+        self.last_time = time.time()
+        
         # create the world
         self.world = World()
         for _ in range(PERSONAS):
@@ -93,12 +91,14 @@ class Simulation(animation.FuncAnimation):
         self.plot_update(i)
 
         if not self.world.count_people_based_on_status('I'):
+            print(f'Stopping the simulation\nRemoved: {self.world.count_people_based_on_status("R")}, Susceptible: {self.world.count_people_based_on_status("S")}')
             sim.event_source.stop()
         else:
             if i % 5 == 0:
                 print (
-                    f'Updt: {i}, R0: {self.world.calculate_R0()}'
+                    f'update no: {i * DAY}, updates took: {int(time.time() - self.last_time)}s, Day since T0: {i}, R0: {self.world.calculate_R0()}'
                 )
+                self.last_time = time.time()
         for _ in range(DAY):
             self.world.update()
 
@@ -116,6 +116,7 @@ class Coordinates():
     def set_random_within_bound(self, bound):
         self.x = rnd.randint(-bound.x, bound.x)
         self.y = rnd.randint(-bound.y, bound.y)
+
 
 class World():
     def __init__(self):
@@ -151,7 +152,7 @@ class World():
         c_bar = sum(person.came_in_contact for person in self.get_people_based_on_status("I")) / self.count_people_based_on_status("I")
         for person in self.get_people_based_on_status("I"):
             person.came_in_contact = 0
-        return round(c_bar * DURATION / DAY, 2)
+        return round(self.people[0].infection_probability * c_bar * DURATION / DAY, 2)
     
     def update(self):
         for person in self.people:

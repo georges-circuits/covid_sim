@@ -72,3 +72,6 @@ Přidán nějaký výpočet R0, asi chce doladit. Postupně bych rád přidal v�
 
 ### 7.4
 Založen branch "dev", na master budu dávat jen funkční, ucelené části, které můžete kdykoliv naklonovat a spustit.
+
+### 30.4
+Oprava R0, Přidány výpisy stavu. Merge s master.
